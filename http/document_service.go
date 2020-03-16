@@ -300,11 +300,12 @@ func decodeGetDocumentsRequest(ctx context.Context, r *http.Request) (*getDocume
 
 func (h *DocumentHandler) handlePostDocumentLabel(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	_, _, err := h.getDocument(w, r)
+	d, _, err := h.getDocument(w, r)
 	if err != nil {
 		h.HandleHTTPError(ctx, err, w)
 		return
 	}
+
 	req, err := decodePostLabelMappingRequest(ctx, r, influxdb.DocumentsResourceType)
 	if err != nil {
 		h.HandleHTTPError(ctx, err, w)
@@ -314,6 +315,15 @@ func (h *DocumentHandler) handlePostDocumentLabel(w http.ResponseWriter, r *http
 	if err := req.Mapping.Validate(); err != nil {
 		h.HandleHTTPError(ctx, err, w)
 		return
+	}
+
+	// check for label in the document's existing labels to prevent adding duplicates
+	id := req.Mapping.LabelID
+	for _, l := range d.Labels {
+		if l.ID == id {
+			h.HandleHTTPError(ctx, influxdb.ErrLabelExistsOnResource, w)
+			return
+		}
 	}
 
 	if err := h.LabelService.CreateLabelMapping(ctx, &req.Mapping); err != nil {
