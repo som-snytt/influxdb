@@ -3,6 +3,7 @@
 ### Features
 
 1. [17490](https://github.com/influxdata/influxdb/pull/17490): `influx config -`, to switch back to previous activated configuration
+1. [17618](https://github.com/influxdata/influxdb/pull/17618): Add index for URM by user ID to improve lookup performance
 
 ### UI Improvements
 
